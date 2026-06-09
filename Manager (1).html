@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Book Manager Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --navy:   #08111f;
+  --card:   #111d35;
+  --gold:   #c9a84c;
+  --green:  #2ecc71;
+  --red:    #e74c3c;
+  --blue:   #3b82f6;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; font-family:Outfit,sans-serif; }
+
+body { background:var(--navy); color:#f6f6f6; padding:30px; }
+
+h1 { margin-bottom:25px; color:var(--gold); font-size:26px; letter-spacing:.5px; }
+
+/* ── Stats bar ── */
+.dashboard {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+  margin-bottom:30px;
+}
+.card {
+  background:var(--card);
+  padding:20px;
+  border-radius:10px;
+  border:1px solid rgba(201,168,76,.2);
+}
+.card h3 { font-size:13px; font-weight:500; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:.5px; }
+.card span { font-size:32px; font-weight:700; color:var(--gold); }
+
+/* ── Toolbar ── */
+.toolbar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
+
+input, select {
+  padding:10px 14px;
+  border:1px solid rgba(201,168,76,.25);
+  border-radius:6px;
+  background:#111d35;
+  color:#f6f6f6;
+  min-width:180px;
+  font-family:Outfit,sans-serif;
+  font-size:14px;
+}
+input::placeholder { color:#64748b; }
+select option { background:#111d35; }
+
+.btn-export {
+  padding:10px 20px;
+  background:var(--gold);
+  border:none;
+  cursor:pointer;
+  border-radius:6px;
+  font-weight:600;
+  font-family:Outfit,sans-serif;
+  font-size:14px;
+  color:#08111f;
+  transition:opacity .15s;
+}
+.btn-export:hover { opacity:.85; }
+
+/* ── Table ── */
+.table-wrap { overflow-x:auto; border-radius:10px; border:1px solid rgba(201,168,76,.15); }
+
+table { width:100%; border-collapse:collapse; background:var(--card); }
+
+th {
+  background:#18284a;
+  padding:13px 14px;
+  text-align:left;
+  font-size:13px;
+  font-weight:600;
+  color:#94a3b8;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  white-space:nowrap;
+}
+
+td {
+  padding:12px 14px;
+  border-top:1px solid rgba(255,255,255,.05);
+  font-size:14px;
+  vertical-align:middle;
+  color:#e2e8f0;
+}
+
+tbody tr:hover { background:rgba(255,255,255,.025); }
+
+/* ── Approve button ── */
+.btn-approve {
+  padding:7px 16px;
+  background:var(--green);
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:600;
+  font-size:13px;
+  font-family:Outfit,sans-serif;
+  transition:opacity .15s;
+  white-space:nowrap;
+}
+.btn-approve:hover { opacity:.85; }
+
+/* ── Approved badge ── */
+.badge-approved {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 12px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--green);
+  border:1px solid rgba(46,204,113,.35);
+  background:rgba(46,204,113,.08);
+  white-space:nowrap;
+}
+
+/* ── Status pill ── */
+.pill-pending {
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  background:rgba(243,156,18,.12);
+  color:#f39c18;
+  border:1px solid rgba(243,156,18,.3);
+}
+.pill-approved {
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  background:rgba(46,204,113,.1);
+  color:var(--green);
+  border:1px solid rgba(46,204,113,.3);
+}
+
+/* ── Toast ── */
+.toast {
+  position:fixed;
+  bottom:30px;
+  right:30px;
+  background:var(--green);
+  color:#fff;
+  padding:14px 22px;
+  border-radius:8px;
+  font-weight:600;
+  font-size:14px;
+  display:none;
+  z-index:999;
+  box-shadow:0 6px 24px rgba(0,0,0,.4);
+  animation:fadeup .3s ease;
+}
+@keyframes fadeup {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── Empty state ── */
+.empty {
+  text-align:center;
+  padding:50px 20px;
+  color:#475569;
+  font-size:15px;
+}
+
+@media(max-width:900px){
+  .dashboard { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<h1>BookInd Manager Dashboard</h1>
+
+<!-- Stats -->
+<div class="dashboard">
+  <div class="card">
+    <h3>Total Books</h3>
+    <span id="statBooks">0</span>
+  </div>
+  <div class="card">
+    <h3>Total Bookings</h3>
+    <span id="statBookings">0</span>
+  </div>
+  <div class="card">
+    <h3>Sent to Finance</h3>
+    <span id="statApproved">0</span>
+  </div>
+  <div class="card">
+    <h3>Pending Approval</h3>
+    <span id="statPending">0</span>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <input type="text" id="search" placeholder="Search by title or Book ID">
+  <select id="typeFilter">
+    <option value="">All Types</option>
+    <option value="fb">FB</option>
+    <option value="cb">CB</option>
+    <option value="oc">OC</option>
+  </select>
+  <button class="btn-export" onclick="exportCSV()">Export CSV</button>
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Book ID</th>
+        <th>Type</th>
+        <th>Publisher</th>
+        <th>Title</th>
+        <th>Authors</th>
+        <th>Positions</th>
+        <th>Booked By</th>
+        <th>Status</th>
+        <th>Approve</th>
+      </tr>
+    </thead>
+    <tbody id="recordsTable"></tbody>
+  </table>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✓ Sent to Finance Team</div>
+
+<script>
+/* ── Data ── */
+let records = JSON.parse(localStorage.getItem("bookind_records")) || [];
+
+/* ── Helpers ── */
+function hasBooking(r) {
+  return r.rows && r.rows.some(row =>
+    row.author && row.author.trim() !== "" &&
+    row.bookingDate && row.bookingDate.trim() !== ""
+  );
+}
+
+function authorsText(r) {
+  if (!r.rows) return "—";
+  return r.rows.map(x => x.author).filter(Boolean).join(", ") || "—";
+}
+
+function positionsText(r) {
+  if (!r.rows) return "—";
+  const filled = r.rows.filter(x => x.author && x.bookingDate);
+  return filled.map(x => "Position " + (x.position || "—")).join(", ") || "—";
+}
+
+/* ── Stats ── */
+function updateStats() {
+  let totalBooks    = records.length;
+  let totalBookings = 0;
+  let approved      = 0;
+
+  records.forEach(r => {
+    if (hasBooking(r)) {
+      totalBookings++;
+      if (r.approved) approved++;
+    }
+  });
+
+  document.getElementById("statBooks").innerText    = totalBooks;
+  document.getElementById("statBookings").innerText = totalBookings;
+  document.getElementById("statApproved").innerText = approved;
+  document.getElementById("statPending").innerText  = totalBookings - approved;
+}
+
+/* ── In-place row refresh ── */
+function refreshRow(index) {
+  const tr = document.getElementById("row-" + index);
+  if (!tr) return;
+  const r = records[index];
+
+  tr.querySelector(".cell-authors").textContent   = authorsText(r);
+  tr.querySelector(".cell-positions").textContent = positionsText(r);
+  tr.querySelector(".cell-bookedby").textContent  = r.bookedBy || "—";
+  tr.querySelector(".cell-status").innerHTML      = statusHTML(r);
+  tr.querySelector(".cell-approve").innerHTML     = approveHTML(index, r);
+}
+
+/* ── HTML snippets ── */
+function statusHTML(r) {
+  if (r.approved) {
+    return `<span class="pill-approved">✓ Approved</span>
+            <div style="font-size:11px;color:#64748b;margin-top:3px">${r.approvedDate || ""}</div>`;
+  }
+  return `<span class="pill-pending">⏳ Pending</span>`;
+}
+
+function approveHTML(index, r) {
+  if (r.approved) {
+    return `<span class="badge-approved">✓ Sent to Finance</span>`;
+  }
+  return `<button class="btn-approve" onclick="approveRecord(${index})">Approve</button>`;
+}
+
+/* ── Approve action ── */
+function approveRecord(index) {
+  if (!confirm("Approve this record and send to Finance Team?")) return;
+
+  records[index].approved     = true;
+  records[index].approvedDate = new Date().toLocaleDateString("en-IN", {
+    day:"2-digit", month:"short", year:"numeric"
+  });
+
+  localStorage.setItem("bookind_records", JSON.stringify(records));
+
+  /* update only that row — no full re-render */
+  refreshRow(index);
+  updateStats();
+  showToast();
+}
+
+/* ── Toast ── */
+function showToast() {
+  const t = document.getElementById("toast");
+  t.style.display = "block";
+  setTimeout(() => { t.style.display = "none"; }, 3000);
+}
+
+/* ── Full render ── */
+function render() {
+  const search     = document.getElementById("search").value.toLowerCase();
+  const typeFilter = document.getElementById("typeFilter").value;
+
+  let html = "";
+  let shown = 0;
+
+  records.forEach((r, index) => {
+    if (typeFilter && r.type !== typeFilter) return;
+
+    const titleMatch  = r.title  && r.title.toLowerCase().includes(search);
+    const bookIdMatch = r.bookId && r.bookId.toLowerCase().includes(search);
+    if (search && !titleMatch && !bookIdMatch) return;
+
+    shown++;
+    html += `
+      <tr id="row-${index}">
+        <td>${r.bookId || "—"}</td>
+        <td>${r.type ? r.type.toUpperCase() : "—"}</td>
+        <td>${r.publisher || "—"}</td>
+        <td>${r.title || "—"}</td>
+        <td class="cell-authors">${authorsText(r)}</td>
+        <td class="cell-positions">${positionsText(r)}</td>
+        <td class="cell-bookedby">${r.bookedBy || "—"}</td>
+        <td class="cell-status">${statusHTML(r)}</td>
+        <td class="cell-approve">${approveHTML(index, r)}</td>
+      </tr>`;
+  });
+
+  if (shown === 0) {
+    html = `<tr><td colspan="9" class="empty">No records found.</td></tr>`;
+  }
+
+  document.getElementById("recordsTable").innerHTML = html;
+  updateStats();
+}
+
+/* ── Export CSV ── */
+function exportCSV() {
+  const esc = v => `"${String(v || "").replace(/"/g,'""')}"`;
+
+  let csv = "Book ID,Type,Publisher,Title,Authors,Positions,Booked By,Status,Approved Date\n";
+
+  records.forEach(r => {
+    const status   = r.approved ? "Approved" : "Pending";
+    const approved = r.approved ? (r.approvedDate || "") : "";
+    csv += [
+      esc(r.bookId),
+      esc(r.type ? r.type.toUpperCase() : ""),
+      esc(r.publisher),
+      esc(r.title),
+      esc(authorsText(r)),
+      esc(positionsText(r)),
+      esc(r.bookedBy || ""),
+      esc(status),
+      esc(approved)
+    ].join(",") + "\n";
+  });
+
+  const blob = new Blob([csv], { type:"text/csv" });
+  const a    = document.createElement("a");
+  a.href     = URL.createObjectURL(blob);
+  a.download = "bookind-records.csv";
+  a.click();
+}
+
+/* ── Events ── */
+document.getElementById("search").addEventListener("keyup", render);
+document.getElementById("typeFilter").addEventListener("change", render);
+
+render();
+</script>
+
+</body>
+</html>

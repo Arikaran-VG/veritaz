@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking Details</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:       #080d18;
+  --navy-mid:   #0e1628;
+  --navy-card:  #111d35;
+  --navy-light: #1a2a4a;
+  --gold:       #c9a84c;
+  --gold-light: #e8cc85;
+  --gold-dim:   #7a6228;
+  --pearl:      #f0ece4;
+  --silver:     #a8b8cc;
+  --silver-dim: #5a6880;
+  --green-yes:  #2ecc71;
+  --red-no:     #e74c3c;
+  --row-paid:   rgba(46,204,113,0.08);
+  --border:     rgba(201,168,76,0.18);
+  --border-focus: rgba(201,168,76,0.65);
+  --shadow-card: 0 24px 64px rgba(0,0,0,0.55);
+  --shadow-sm:   0 4px 16px rgba(0,0,0,0.35);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--navy);
+  color: var(--pearl);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* ── Pages ── */
+.page { display: none; min-height: 100vh; position: relative; z-index: 1; }
+.page.active { display: block; }
+
+/* ══════════════════════════════════════
+   LANDING
+══════════════════════════════════════ */
+#landing {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 60px 24px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+#landing.active { display: flex; }
+
+/* ambient glows */
+#landing .glow-tl {
+  position: absolute; top: -120px; left: -120px;
+  width: 480px; height: 480px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 65%);
+  pointer-events: none;
+}
+#landing .glow-br {
+  position: absolute; bottom: -100px; right: -100px;
+  width: 400px; height: 400px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(50,80,180,0.14) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* decorative horizontal lines */
+.deco-line {
+  width: 1px; height: 80px;
+  background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+  margin: 0 auto 32px;
+  animation: fadeDown 0.6s ease both;
+}
+
+.landing-header {
+  text-align: center;
+  margin-bottom: 64px;
+  animation: fadeDown 0.7s 0.1s ease both;
+}
+.landing-header .eyebrow {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+.landing-header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(52px, 9vw, 108px);
+  font-weight: 300;
+  line-height: 0.88;
+  letter-spacing: -1px;
+  color: var(--pearl);
+}
+.landing-header h1 em {
+  font-style: italic;
+  color: var(--gold);
+  font-weight: 300;
+}
+.landing-header .subtitle {
+  margin-top: 18px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--silver-dim);
+}
+
+/* gold hairline divider */
+.gold-rule {
+  width: 60px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  margin: 20px auto 0;
+}
+
+/* cards */
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 20px;
+  max-width: 860px;
+  width: 100%;
+  animation: fadeUp 0.8s 0.25s ease both;
+}
+
+.option-card {
+  background: var(--navy-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 44px 28px 36px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  transition: border-color 0.35s, transform 0.3s, box-shadow 0.35s;
+  box-shadow: var(--shadow-sm);
+}
+.option-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.option-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-6px);
+  box-shadow: 0 32px 72px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.3);
+}
+.option-card:hover::after { opacity: 1; }
+.option-card > * { position: relative; z-index: 1; }
+
+.card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-dim);
+  margin: 0 auto 22px;
+  background: var(--navy-mid);
+  transition: border-color 0.3s, background 0.3s;
+}
+.option-card:hover .card-icon {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.12);
+}
+.card-icon span {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0;
+}
+
+.card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--pearl);
+  margin-bottom: 10px;
+  letter-spacing: 0.3px;
+}
+.card-desc {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--silver-dim);
+  letter-spacing: 0.3px;
+  line-height: 1.7;
+}
+.card-arrow {
+  display: inline-block;
+  margin-top: 22px;
+  font-size: 11px;
+  font-family: 'Fira Code', monospace;
+  letter-spacing: 2px;
+  color: var(--gold-dim);
+  transition: color 0.3s, transform 0.3s;
+}
+.option-card:hover .card-arrow {
+  color: var(--gold);
+  transform: translateX(5px);
+}
+
+/* ══════════════════════════════════════
+   BOOK PAGES
+══════════════════════════════════════ */
+.book-page { padding-bottom: 72px; }
+
+.page-topbar {
+  background: var(--navy-mid);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 40px;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.back-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--silver);
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 7px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.22s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.back-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.topbar-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.topbar-brand .tb-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--pearl);
+}
+.topbar-brand .tb-sep {
+  width: 1px; height: 18px;
+  background: var(--border);
+}
+.topbar-brand .tb-sub {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--silver-dim);
+  letter-spacing: 0.5px;
+}
+
+.topbar-badge {
+  margin-left: auto;
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  padding: 4px 14px;
+  border-radius: 2px;
+  background: rgba(201,168,76,0.06);
+}
+
+.page-body {
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: 44px 36px;
+}
+
+/* section label */
+.section-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--border), transparent);
+}
+
+/* ── HEADER FIELDS ── */
+.header-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 20px;
+  margin-bottom: 44px;
+}
+.field-group { display: flex; flex-direction: column; gap: 8px; }
+.field-group label {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--silver-dim);
+}
+.field-group input,
+.field-group select {
+  background: var(--navy-card);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 11px 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--pearl);
+  outline: none;
+  transition: border-color 0.22s, box-shadow 0.22s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.field-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c9a84c' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+.field-group input::placeholder { color: var(--silver-dim); font-weight: 300; }
+.field-group input:focus,
+.field-group select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+.field-group select option { background: var(--navy-mid); color: var(--pearl); }
+
+/* ── TABLE ── */
+.table-section { margin-top: 4px; }
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  min-width: 1120px;
+}
+
+thead tr {
+  background: var(--navy-mid);
+  border-bottom: 1px solid var(--border);
+}
+thead th {
+  padding: 14px 12px;
+  text-align: left;
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+  border-right: 1px solid var(--border);
+}
+thead th:last-child { border-right: none; }
+thead th:first-child {
+  text-align: center;
+  width: 56px;
+}
+
+tbody tr {
+  border-bottom: 1px solid rgba(201,168,76,0.07);
+  transition: background 0.3s ease;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover:not(.paid) { background: rgba(255,255,255,0.02); }
+tbody tr.paid { background: var(--row-paid) !important; }
+
+tbody td {
+  padding: 5px 5px;
+  border-right: 1px solid rgba(201,168,76,0.07);
+  vertical-align: middle;
+}
+tbody td:last-child { border-right: none; }
+
+.pos-cell {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--gold-dim);
+  text-align: center;
+  padding: 5px 4px;
+  min-width: 42px;
+}
+tbody tr.paid .pos-cell { color: var(--green-yes); }
+
+tbody td input,
+tbody td select,
+tbody td textarea {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 7px 9px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--pearl);
+  outline: none;
+  resize: none;
+  transition: border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+tbody td input::placeholder { color: var(--silver-dim); font-size: 12px; font-weight: 300; }
+tbody td input:focus,
+tbody td select:focus {
+  border-color: var(--gold-dim);
+  background: rgba(201,168,76,0.04);
+}
+tbody td input[type="date"] { cursor: pointer; color-scheme: dark; }
+tbody td input[type="number"] { font-family: 'Fira Code', monospace; font-size: 12px; }
+
+/* status selects */
+select.status-select {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235a6880' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 22px;
+}
+select.status-select.val-empty { color: var(--silver-dim); }
+select.status-select.val-yes   { color: var(--green-yes); }
+select.status-select.val-no    { color: var(--red-no); }
+
+/* ── ACTIONS ── */
+.actions-row {
+  margin-top: 28px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.save-btn {
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 13px 36px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.22s, transform 0.15s, box-shadow 0.22s;
+  box-shadow: 0 4px 20px rgba(201,168,76,0.25);
+}
+.save-btn:hover {
+  background: var(--gold-light);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(201,168,76,0.38);
+}
+.save-btn:active { transform: translateY(0); }
+
+.clear-btn {
+  background: transparent;
+  color: var(--silver-dim);
+  border: 1px solid rgba(168,184,204,0.2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 12px 28px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.22s;
+}
+.clear-btn:hover { border-color: #e74c3c; color: #e74c3c; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── TITLE DROPDOWN + CUSTOM INPUT ── */
+.field-group .custom-title-input {
+  display: none;
+  margin-top: 8px;
+}
+
+/* ── TITLE MANAGER ── */
+.admin-link-wrap {
+  margin-top: 36px;
+  text-align: center;
+  animation: fadeUp 0.9s 0.4s ease both;
+}
+.admin-link {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--silver-dim);
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  padding: 9px 22px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: border-color 0.22s, color 0.22s;
+}
+.admin-link:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+.tm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.tm-panel {
+  background: var(--navy-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 28px 26px 24px;
+}
+
+.tm-list {
+  min-height: 180px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(201,168,76,0.09);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tm-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(201,168,76,0.07);
+  transition: background 0.18s;
+}
+.tm-item:last-child { border-bottom: none; }
+.tm-item:hover { background: rgba(255,255,255,0.025); }
+
+.tm-title-text {
+  font-size: 13px;
+  color: var(--pearl);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tm-del {
+  flex-shrink: 0;
+  width: 26px; height: 26px;
+  background: transparent;
+  border: 1px solid rgba(231,76,60,0.3);
+  color: var(--red-no);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.18s, border-color 0.18s;
+}
+.tm-del:hover { background: rgba(231,76,60,0.15); border-color: var(--red-no); }
+
+.tm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  color: var(--silver-dim);
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-align: center;
+  line-height: 2;
+}
+
+.tm-input-row {
+  display: flex;
+  gap: 10px;
+}
+.tm-input-row input {
+  flex: 1;
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: var(--pearl);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.tm-input-row input::placeholder { color: var(--silver-dim); font-weight: 300; font-size: 12px; }
+.tm-input-row input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+.tm-add-btn {
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.tm-add-btn:hover { background: var(--gold-light); }
+
+.tm-count {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  color: var(--gold-dim);
+  margin-left: 6px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 720px) {
+  .option-grid { grid-template-columns: 1fr; }
+  .header-fields { grid-template-columns: 1fr; }
+  .page-topbar { padding: 0 16px; }
+  .page-body { padding: 28px 16px; }
+  .tm-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LANDING ══════════════ -->
+<div id="landing" class="page active">
+  <div class="glow-tl"></div>
+  <div class="glow-br"></div>
+
+  <div class="deco-line"></div>
+
+  <div class="landing-header">
+    <div class="eyebrow">Publishing Management System</div>
+    <h1>Book<em>Ind</em></h1>
+    <div class="gold-rule"></div>
+    <p class="subtitle">Details &amp; Booking Records Portal</p>
+  </div>
+
+  <div class="option-grid">
+    <div class="option-card" onclick="goTo('fb')">
+      <div class="card-icon"><span>FB</span></div>
+      <div class="card-title">Full Book</div>
+      <div class="card-desc">Complete book booking<br>with all author slots</div>
+      <div class="card-arrow">OPEN →</div>
+    </div>
+    <div class="option-card" onclick="goTo('cb')">
+      <div class="card-icon"><span>CB</span></div>
+      <div class="card-title">Collab Book</div>
+      <div class="card-desc">Collaborative publishing<br>multi-author arrangement</div>
+      <div class="card-arrow">OPEN →</div>
+    </div>
+    <div class="option-card" onclick="goTo('oc')">
+      <div class="card-icon"><span>OC</span></div>
+      <div class="card-title">Own Content</div>
+      <div class="card-desc">Author-owned content<br>with syllabus tracking</div>
+      <div class="card-arrow">OPEN →</div>
+    </div>
+  </div>
+
+  <div class="admin-link-wrap">
+    <button class="admin-link" onclick="goTo('tm')">⚙ &nbsp; Manage Book Titles</button>
+  </div>
+</div>
+
+<!-- ══════════════ FULL BOOK ══════════════ -->
+<div id="page-fb" class="page book-page">
+  <div class="page-topbar">
+    <button class="back-btn" onclick="goBack()">← BACK</button>
+    <div class="topbar-brand">
+      <span class="tb-name">BookInd Details</span>
+      <div class="tb-sep"></div>
+      <span class="tb-sub">Full Book Booking</span>
+    </div>
+    <div class="topbar-badge">FB</div>
+  </div>
+  <div class="page-body">
+    <div class="section-label">Book Information</div>
+    <div class="header-fields">
+      <div class="field-group">
+        <label>Book ID</label>
+        <input type="text" id="fb-book-id" placeholder="e.g. BK-2024-001">
+      </div>
+      <div class="field-group">
+        <label>Publisher</label>
+        <select id="fb-publisher">
+          <option value="">— Select Publisher —</option>
+          <option>Pencil Bitz</option>
+          <option>Veritaz International</option>
+          <option>DH Sparrow</option>
+          <option>Book Bytes</option>
+          <option>Elbee</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Book Title</label>
+        <select id="fb-book-title" onchange="onTitleSelect('fb')">
+          <option value="">— Select Book Title —</option>
+          <option value="__custom__">✎ Enter Custom Title</option>
+        </select>
+        <input type="text" id="fb-book-title-custom" class="custom-title-input"
+               placeholder="Type book title…">
+      </div>
+    </div>
+    <div class="section-label">Booking Slots</div>
+    <div class="table-section">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th>
+            <th>Booking Date</th>
+            <th>Author Name</th>
+            <th>Booked By</th>
+            <th>Payment Date</th>
+            <th>Amount</th>
+            <th>Special Comments (if Any)</th>
+            <th>Reporting</th>
+          </tr></thead>
+          <tbody id="fb-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="save-btn" onclick="saveData('fb')">Save Record</button>
+      <button class="clear-btn" onclick="clearTable('fb')">Clear All</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ COLLAB BOOK ══════════════ -->
+<div id="page-cb" class="page book-page">
+  <div class="page-topbar">
+    <button class="back-btn" onclick="goBack()">← BACK</button>
+    <div class="topbar-brand">
+      <span class="tb-name">BookInd Details</span>
+      <div class="tb-sep"></div>
+      <span class="tb-sub">Collab Book Booking</span>
+    </div>
+    <div class="topbar-badge">CB</div>
+  </div>
+  <div class="page-body">
+    <div class="section-label">Book Information</div>
+    <div class="header-fields">
+      <div class="field-group">
+        <label>Book ID</label>
+        <input type="text" id="cb-book-id" placeholder="e.g. BK-2024-001">
+      </div>
+      <div class="field-group">
+        <label>Publisher</label>
+        <select id="cb-publisher">
+          <option value="">— Select Publisher —</option>
+          <option>Pencil Bitz</option>
+          <option>Veritaz International</option>
+          <option>DH Sparrow</option>
+          <option>Book Bytes</option>
+          <option>Elbee</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Book Title</label>
+        <select id="cb-book-title" onchange="onTitleSelect('cb')">
+          <option value="">— Select Book Title —</option>
+          <option value="__custom__">✎ Enter Custom Title</option>
+        </select>
+        <input type="text" id="cb-book-title-custom" class="custom-title-input"
+               placeholder="Type book title…">
+      </div>
+    </div>
+    <div class="section-label">Booking Slots</div>
+    <div class="table-section">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th>
+            <th>Booking Date</th>
+            <th>Author Name</th>
+            <th>Booked By</th>
+            <th>Payment Date</th>
+            <th>Amount</th>
+            <th>Special Comments (if Any)</th>
+            <th>Reporting</th>
+          </tr></thead>
+          <tbody id="cb-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="save-btn" onclick="saveData('cb')">Save Record</button>
+      <button class="clear-btn" onclick="clearTable('cb')">Clear All</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ OWN CONTENT ══════════════ -->
+<div id="page-oc" class="page book-page">
+  <div class="page-topbar">
+    <button class="back-btn" onclick="goBack()">← BACK</button>
+    <div class="topbar-brand">
+      <span class="tb-name">BookInd Details</span>
+      <div class="tb-sep"></div>
+      <span class="tb-sub">Own Content Booking</span>
+    </div>
+    <div class="topbar-badge">OC</div>
+  </div>
+  <div class="page-body">
+    <div class="section-label">Book Information</div>
+    <div class="header-fields">
+      <div class="field-group">
+        <label>Book ID</label>
+        <input type="text" id="oc-book-id" placeholder="e.g. BK-2024-001">
+      </div>
+      <div class="field-group">
+        <label>Publisher</label>
+        <select id="oc-publisher">
+          <option value="">— Select Publisher —</option>
+          <option>Pencil Bitz</option>
+          <option>Veritaz International</option>
+          <option>DH Sparrow</option>
+          <option>Book Bytes</option>
+          <option>Elbee</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Book Title</label>
+        <input type="text" id="oc-book-title" placeholder="Enter book title">
+      </div>
+    </div>
+    <div class="section-label">Booking Slots</div>
+    <div class="table-section">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th>
+            <th>Booking Date</th>
+            <th>Author Name</th>
+            <th>Booked By</th>
+            <th>Payment Date</th>
+            <th>Amount</th>
+            <th>Special Comments (if Any)</th>
+            <th>Reporting</th>
+            <th>Syllabus</th>
+          </tr></thead>
+          <tbody id="oc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="save-btn" onclick="saveData('oc')">Save Record</button>
+      <button class="clear-btn" onclick="clearTable('oc')">Clear All</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ TITLE MANAGER ══════════════ -->
+<div id="page-tm" class="page book-page">
+  <div class="page-topbar">
+    <button class="back-btn" onclick="goBack()">← BACK</button>
+    <div class="topbar-brand">
+      <span class="tb-name">BookInd Details</span>
+      <div class="tb-sep"></div>
+      <span class="tb-sub">Book Title Manager</span>
+    </div>
+    <div class="topbar-badge">TM</div>
+  </div>
+  <div class="page-body">
+    <div class="tm-grid">
+
+      <!-- Full Book Titles -->
+      <div class="tm-panel">
+        <div class="section-label">
+          Full Book Titles
+          <span class="tm-count" id="tm-count-fb"></span>
+        </div>
+        <div class="tm-list" id="tm-list-fb"></div>
+        <div class="tm-input-row">
+          <input type="text" id="tm-input-fb"
+                 placeholder="Add a Full Book title…"
+                 onkeydown="if(event.key==='Enter') addTitle('fb')">
+          <button class="tm-add-btn" onclick="addTitle('fb')">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Collab Book Titles -->
+      <div class="tm-panel">
+        <div class="section-label">
+          Collab Book Titles
+          <span class="tm-count" id="tm-count-cb"></span>
+        </div>
+        <div class="tm-list" id="tm-list-cb"></div>
+        <div class="tm-input-row">
+          <input type="text" id="tm-input-cb"
+                 placeholder="Add a Collab Book title…"
+                 onkeydown="if(event.key==='Enter') addTitle('cb')">
+          <button class="tm-add-btn" onclick="addTitle('cb')">+ Add</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const ROWS = 5;
+
+function statusSelectHTML() {
+  return `<select class="status-select val-empty" onchange="updateSelectColor(this)">
+    <option value="">—</option>
+    <option value="yes">Yes</option>
+    <option value="no">No</option>
+  </select>`;
+}
+
+function updateSelectColor(sel) {
+  sel.className = 'status-select ' +
+    (sel.value === 'yes' ? 'val-yes' : sel.value === 'no' ? 'val-no' : 'val-empty');
+}
+
+function buildRows(tbodyId, hasSyllabus) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = '';
+  for (let i = 1; i <= ROWS; i++) {
+    const tr = document.createElement('tr');
+    tr.dataset.row = i;
+    tr.innerHTML = `
+      <td class="pos-cell">${i}</td>
+      <td><input type="date"></td>
+      <td><input type="text" placeholder="Author name"></td>
+      <td><input type="text" placeholder="Booked by"></td>
+      <td><input type="date" class="payment-date" onchange="onPaymentDate(this)"></td>
+      <td><input type="number" placeholder="0.00" step="0.01" min="0"></td>
+      <td><input type="text" placeholder="Add comments…"></td>
+      <td>${statusSelectHTML()}</td>
+      ${hasSyllabus ? `<td>${statusSelectHTML()}</td>` : ''}
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function onPaymentDate(input) {
+  const row = input.closest('tr');
+  row.classList.toggle('paid', !!input.value);
+}
+
+function goTo(type) {
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
+  document.getElementById('landing').style.display = 'none';
+
+  const target = document.getElementById('page-' + type);
+  target.style.display = 'block';
+  target.classList.add('active');
+
+  // Title Manager: just render lists and return
+  if (type === 'tm') {
+    renderTitleList();
+    return;
+  }
+
+  // Build rows if empty
+  const tbodyId = type + '-tbody';
+  const tbody = document.getElementById(tbodyId);
+  if (tbody && !tbody.children.length) {
+    buildRows(tbodyId, type === 'oc');
+  }
+
+  // Populate title dropdown for FB / CB
+  if (type === 'fb' || type === 'cb') {
+    populateTitleDropdown(type);
+  }
+}
+
+function goBack() {
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
+  const land = document.getElementById('landing');
+  land.style.display = 'flex';
+  land.classList.add('active');
+}
+
+function clearTable(type) {
+  if (!confirm('Clear all row data? This cannot be undone.')) return;
+  buildRows(type + '-tbody', type === 'oc');
+}
+
+function saveData(type) {
+  const id  = document.getElementById(type + '-book-id').value.trim();
+  const pub = document.getElementById(type + '-publisher').value;
+
+  // Resolve book title — dropdown (fb/cb) or plain input (oc)
+  const titleEl = document.getElementById(type + '-book-title');
+  let ttl;
+  if (titleEl.tagName === 'SELECT') {
+    if (titleEl.value === '__custom__') {
+      ttl = document.getElementById(type + '-book-title-custom').value.trim();
+    } else {
+      ttl = titleEl.value.trim();
+    }
+  } else {
+    ttl = titleEl.value.trim();
+  }
+
+  if (!id || !pub || !ttl) {
+    alert('Please complete Book ID, Publisher, and Book Title.');
+    return;
+  }
+
+  const rows = [];
+
+  document.querySelectorAll(`#${type}-tbody tr`).forEach(row => {
+    const inputs = row.querySelectorAll('input,select');
+
+    rows.push({
+      position: row.dataset.row,
+      bookingDate: inputs[0].value,
+      author: inputs[1].value,
+      bookedBy: inputs[2].value,
+      paymentDate: inputs[3].value,
+      amount: inputs[4].value,
+      comments: inputs[5].value,
+      reporting: inputs[6].value
+    });
+  });
+
+  const record = {
+    type,
+    bookId: id,
+    publisher: pub,
+    title: ttl,
+    rows,
+    savedAt: new Date().toISOString()
+  };
+
+  let allRecords =
+    JSON.parse(localStorage.getItem("bookind_records")) || [];
+
+  allRecords.push(record);
+
+  localStorage.setItem(
+    "bookind_records",
+    JSON.stringify(allRecords)
+  );
+
+  alert("Record Saved Successfully");
+}
+
+/* ══════════════════════════════════════
+   TITLE MANAGER
+══════════════════════════════════════ */
+function getTitles(type) {
+  return JSON.parse(localStorage.getItem('bookind_titles_' + type)) || [];
+}
+
+function saveTitles(type, arr) {
+  localStorage.setItem('bookind_titles_' + type, JSON.stringify(arr));
+}
+
+/** Rebuild the <select> for FB or CB from localStorage */
+function populateTitleDropdown(type) {
+  const sel = document.getElementById(type + '-book-title');
+  if (!sel || sel.tagName !== 'SELECT') return;
+  const titles = getTitles(type);
+
+  sel.innerHTML = `<option value="">— Select Book Title —</option>`;
+  titles.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t;
+    sel.appendChild(opt);
+  });
+  const customOpt = document.createElement('option');
+  customOpt.value = '__custom__';
+  customOpt.textContent = '✎ Enter Custom Title';
+  sel.appendChild(customOpt);
+
+  // Reset custom input visibility
+  onTitleSelect(type);
+}
+
+/** Show/hide the custom text input when "✎ Enter Custom Title" is chosen */
+function onTitleSelect(type) {
+  const sel = document.getElementById(type + '-book-title');
+  const ci  = document.getElementById(type + '-book-title-custom');
+  if (!ci) return;
+  const show = sel && sel.value === '__custom__';
+  ci.style.display = show ? 'block' : 'none';
+  if (!show) ci.value = '';
+}
+
+/** Render the title lists inside the Title Manager page */
+function renderTitleList() {
+  ['fb', 'cb'].forEach(type => {
+    const list  = document.getElementById('tm-list-' + type);
+    const count = document.getElementById('tm-count-' + type);
+    if (!list) return;
+
+    const titles = getTitles(type);
+    if (count) count.textContent = titles.length ? `(${titles.length})` : '';
+
+    if (titles.length === 0) {
+      list.innerHTML = `<div class="tm-empty">
+        No titles added yet.<br>Add one below.
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = titles.map((t, i) => `
+      <div class="tm-item">
+        <span class="tm-title-text" title="${t}">${t}</span>
+        <button class="tm-del" onclick="deleteTitle('${type}',${i})" title="Remove">×</button>
+      </div>
+    `).join('');
+  });
+}
+
+/** Add a title to the list */
+function addTitle(type) {
+  const input = document.getElementById('tm-input-' + type);
+  const val   = input.value.trim();
+  if (!val) { input.focus(); return; }
+
+  const titles = getTitles(type);
+  if (titles.map(t => t.toLowerCase()).includes(val.toLowerCase())) {
+    alert('This title already exists in the list.');
+    return;
+  }
+
+  titles.push(val);
+  saveTitles(type, titles);
+  input.value = '';
+  input.focus();
+  renderTitleList();
+}
+
+/** Remove a title by index */
+function deleteTitle(type, index) {
+  if (!confirm('Remove this title from the list?')) return;
+  const titles = getTitles(type);
+  titles.splice(index, 1);
+  saveTitles(type, titles);
+  renderTitleList();
+}
+
+document.getElementById('landing').style.display = 'flex';
+</script>
+</body>
+</html>
